@@ -2,7 +2,6 @@
 #define HGT_HEIGHT_ENTRY_HPP
 
 #include <string>
-#include <fstream>
 #include <array>
 
 #include <SFML/Graphics/Color.hpp>

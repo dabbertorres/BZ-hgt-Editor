@@ -86,14 +86,9 @@ namespace hgt
 
 	sf::Color HeightEntry::toColor() const
 	{
-		// 4095 = 2^12 - 1
-		float heightColor = static_cast<float>(height.integer);
-		float bScale = heightColor / 128.f;
-		heightColor /= 128;
-		float gScale = heightColor / 128.f;
-		heightColor /= 128;
-		float rScale = heightColor / 128.f;
-		heightColor /= 128;
+		float rScale = ((height.integer & 15 << 8) >> 8) / 15.f;
+		float gScale = ((height.integer & 15 << 4) >> 4) / 15.f;
+		float bScale = ((height.integer & 15 << 0) >> 0) / 15.f;
 
 		// 255 = max value of a component of color
 		byte r = static_cast<byte>(255 * rScale);
@@ -105,7 +100,7 @@ namespace hgt
 
 	bool HeightEntry::readBit(unsigned int b) const
 	{
-		return (height.bytes[b / 8] & (1 << (b % 8))) != 0;	// friggin VS (" != 0")
+		return (height.bytes[b / 8] & (1 << (b % 8))) != 0;
 	}
 
 	void HeightEntry::writeBit(unsigned int b, bool v)

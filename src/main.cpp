@@ -46,8 +46,13 @@ int main(int argc, char** argv)
 
 	const std::array<float, 9> zoomLevels = {0.1f, 0.25f, 0.5f, 0.75f, 1.f, 1.25f, 1.5f, 1.75f, 1.9f};
 	int currentZoomLevel = 4;
+
 	bool mouseInWindow = false;
+
 	bool ctrlPressed = false;
+	bool shiftPressed = false;
+
+	int cursorSize = 1;
 
 	while(window.isOpen())
 	{
@@ -62,9 +67,14 @@ int main(int argc, char** argv)
 				case sf::Event::KeyPressed:
 					switch(event.key.code)
 					{
+						// modifiers
 						case sf::Keyboard::LControl:
 							ctrlPressed = true;
 							break;
+						case sf::Keyboard::LShift:
+							shiftPressed = true;
+							break;
+						// view movement
 						case sf::Keyboard::Left:
 							view.move(-VIEW_MOVE, 0);
 							break;
@@ -84,9 +94,14 @@ int main(int argc, char** argv)
 				case sf::Event::KeyReleased:
 					switch(event.key.code)
 					{
+						// modifiers
 						case sf::Keyboard::LControl:
 							ctrlPressed = false;
 							break;
+						case sf::Keyboard::LShift:
+							shiftPressed = false;
+							break;
+						// cursor sizing
 						case sf::Keyboard::Num1:
 							cursor.setSize({1, 1});
 							cursor.setOrigin(cursor.getSize() / 2.f);
@@ -141,7 +156,7 @@ int main(int argc, char** argv)
 				{
 					if(mouseInWindow)
 					{
-						sf::Vector2f mousePos = {static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y)};
+						sf::Vector2f mousePos = window.mapPixelToCoords({event.mouseMove.x, event.mouseMove.y});
 						cursor.setPosition(mousePos);
 
 						//heightText.setString(std::to_string(map.getEntry(static_cast<unsigned int>(mousePos.x), static_cast<unsigned int>(mousePos.y)).getHeightInt()));
@@ -153,26 +168,35 @@ int main(int argc, char** argv)
 					if(ctrlPressed)
 					{
 						int prevZoomLevel = currentZoomLevel;
-						std::cout << "previous: " << currentZoomLevel << '\n';
 						currentZoomLevel += event.mouseWheelScroll.delta > 0 ? -1 : 1;
-						std::cout << "currrent: " << currentZoomLevel << '\n';
 
 						// bound the zoom level
 						if(currentZoomLevel < 0 || static_cast<unsigned int>(currentZoomLevel) >= zoomLevels.size())
 						{
 							// undo the invalid change
 							currentZoomLevel -= event.mouseWheelScroll.delta > 0 ? -1 : 1;
-							std::cout << "undone: " << currentZoomLevel << '\n';
 							break;
 						}
 
-						view.zoom(1.f + zoomLevels[currentZoomLevel] - zoomLevels[prevZoomLevel]);
+						view.zoom(zoomLevels[currentZoomLevel] * std::pow(zoomLevels[prevZoomLevel], -1));
 
 						// move the view's center towards the mouse position
 						sf::Vector2f mousePos = window.mapPixelToCoords({event.mouseWheelScroll.x, event.mouseWheelScroll.y});
 						sf::Vector2f diff = mousePos - view.getCenter();
-						float scale = std::sqrt(diff.x * diff.x + diff.y * diff.y) / 2;
-						view.setCenter(view.getCenter() + diff / scale);
+						float scale = std::sqrt(diff.x * diff.x + diff.y * diff.y) / 20.f;
+						view.setCenter(view.getCenter() + diff * event.mouseWheelScroll.delta / scale);
+					}
+					else if(shiftPressed)
+					{
+						cursorSize += event.mouseWheelScroll.delta > 0 ? 1 : -1;
+
+						if(cursorSize < 1)
+						{
+							cursorSize = 1;
+						}
+
+						cursor.setSize({static_cast<float>(cursorSize), static_cast<float>(cursorSize)});
+						cursor.setOrigin(cursor.getSize() / 2.f);
 					}
 					else
 					{
@@ -188,8 +212,8 @@ int main(int argc, char** argv)
 		window.clear();
 		window.setView(view);
 		window.draw(map);
-		window.setView(window.getDefaultView());
 		window.draw(cursor);
+		window.setView(window.getDefaultView());
 		//window.draw(heightText);
 		window.setView(view);
 		window.display();
