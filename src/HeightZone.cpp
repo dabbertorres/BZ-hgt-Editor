@@ -46,8 +46,6 @@ namespace hgt
 			}
 
 			e.setHeight(bits);
-
-			sf::Color col = e.toColor();
 		}
 	}
 }
