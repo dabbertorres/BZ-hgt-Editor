@@ -86,10 +86,50 @@ namespace hgt
 
 	sf::Color HeightEntry::toColor() const
 	{
-		// 15 = max decimal value of 4 bits
-		double rScale = ((height.integer & 15 << 8) >> 8) / 15.0;
-		double gScale = ((height.integer & 15 << 4) >> 4) / 15.0;
-		double bScale = ((height.integer & 15 << 0) >> 0) / 15.0;
+		double heightScale = static_cast<double>(height.integer) / hgt::HEIGHT_MAX;
+
+		double bScale = 0;
+		double gScale = 0;
+		double rScale = 0;
+
+		// calculate colors
+		if(heightScale <= 0.25)
+		{
+			bScale = 4 * heightScale;
+		}
+		else if(heightScale <= 0.5)
+		{
+			bScale = -4 * heightScale + 2;
+			gScale = 4 * heightScale - 1;
+		}
+		else if(heightScale <= 0.75)
+		{
+			gScale = -4 * heightScale + 3;
+			rScale = 4 * heightScale - 2;
+		}
+		else
+		{
+			bScale = 4 * heightScale - 3;
+			gScale = 4 * heightScale - 3;
+			rScale = 1.0;
+		}
+
+		// bound colors
+		if(bScale < 0)
+		{
+			bScale = 0;
+		}
+
+		if(gScale < 0)
+		{
+			gScale = 0;
+		}
+
+		if(rScale < 0)
+		{
+			rScale = 0;
+
+		}
 
 		// 255 = max value of a component of color
 		byte r = static_cast<byte>(255 * rScale);

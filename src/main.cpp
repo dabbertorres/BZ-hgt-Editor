@@ -9,9 +9,8 @@
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Text.hpp>
 
-#include <string>
 #include <iostream>
-#include <windows.h>
+#include <string>
 
 #include "Map.hpp"
 #include "HeightEntry.hpp"
@@ -238,7 +237,6 @@ int main(int argc, char** argv)
 					}
 					else
 					{
-						std::cout << event.mouseWheelScroll.delta * heightFactor << '\n';
 						modifyHeight(cursor.getGlobalBounds(), map, static_cast<int>(event.mouseWheelScroll.delta) * heightFactor);
 						needsDrawn = true;
 					}
