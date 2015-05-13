@@ -36,3 +36,8 @@ Shift + Mouse Wheel:
 Alt + Mouse Wheel:
 	Precise height modification
 	
+M:
+	Make selection max height (4095, 409.5 meters in BZ).
+
+N:
+	Make selection min height (0).
