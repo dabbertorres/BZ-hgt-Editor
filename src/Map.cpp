@@ -10,6 +10,21 @@ namespace hgt
 		vertices(std::make_unique<sf::VertexArray>())
 	{}
 
+	void Map::update()
+	{
+		for(auto& v : changedVerts)
+		{
+			sf::Vertex& vertex = (*vertices)[v];
+
+			unsigned int x = static_cast<unsigned int>(vertex.position.x);
+			unsigned int y = static_cast<unsigned int>(vertex.position.y);
+
+			vertex.color = getEntry(x, y, false).toColor();
+		}
+
+		changedVerts.clear();
+	}
+
 	bool Map::write(const std::string& file) const
 	{
 		std::ofstream fout(file, std::ios::binary);
@@ -48,14 +63,7 @@ namespace hgt
 		zoneNum = static_cast<unsigned int>(std::sqrt(zones.size()));
 		size = zoneNum * SIZE_DIV;
 
-		vertices->clear();
-		vertices->setPrimitiveType(sf::PrimitiveType::Points);
-		vertices->resize(zoneNum * ZONE_SIZE * zoneNum * ZONE_SIZE);
-
-		for(unsigned int z = 0; z < zones.size(); z++)
-		{
-			fillVertices(z);
-		}
+		fillVertices();
 
 		return true;
 	}
@@ -65,17 +73,9 @@ namespace hgt
 		return vertices->getBounds();
 	}
 
-	HeightEntry& Map::getEntry(unsigned int x, unsigned int y)
+	HeightEntry& Map::getEntry(int x, int y)
 	{
-		// convert screen coordinates to map coordinates
-		unsigned int mc = x / ZONE_SIZE;
-		unsigned int mr = zoneNum - 1 - y / ZONE_SIZE;
-
-		// convert screen coordinates to zone coordinates
-		unsigned int zc = x % ZONE_SIZE;
-		unsigned int zr = ZONE_SIZE - 1 - y % ZONE_SIZE;
-
-		return zones[mr * zoneNum + mc]->get(zc, zr);
+		return getEntry(x, y, true);
 	}
 
 	unsigned int Map::getSize() const
@@ -88,31 +88,72 @@ namespace hgt
 		return zoneNum;
 	}
 
+	sf::Vector2u Map::screenToMap(const sf::Vector2i& vec) const
+	{
+		return {vec.x / ZONE_SIZE, zoneNum - 1 - vec.y / ZONE_SIZE};
+	}
+
+	sf::Vector2u Map::screenToZone(const sf::Vector2i& vec) const
+	{
+		return {vec.x % ZONE_SIZE, ZONE_SIZE - 1 - vec.y % ZONE_SIZE};
+	}
+
+	sf::Vector2f Map::zoneAndMapToScreen(const sf::Vector2u& map, const sf::Vector2u& zone) const
+	{
+		return {static_cast<float>(map.x * ZONE_SIZE + zone.x), static_cast<float>((zoneNum - 1 - map.y) * ZONE_SIZE + ZONE_SIZE - 1 - zone.y)};
+	}
+
+	sf::Vector2u Map::zoneNumToMap(unsigned int z) const
+	{
+		return {z % zoneNum, z / zoneNum};
+	}
+
+	sf::Vector2u Map::indexToZone(unsigned int i) const
+	{
+		return {i % ZONE_SIZE, ZONE_SIZE - 1 - (i / ZONE_SIZE)};
+	}
+
+	HeightEntry& Map::getEntry(int x, int y, bool track)
+	{
+		if(track)
+		{
+			// convert map and zone coordinates to index
+			unsigned int idx = y * zoneNum * ZONE_SIZE + x;
+
+			// since this vertex is being accessed, it might be changed.
+			// cache its index to check later
+			changedVerts.push_back(idx);
+		}
+
+		sf::Vector2u map = screenToMap({x, y});
+
+		sf::Vector2u zone = screenToZone({x, y});
+
+		return zones[map.y * zoneNum + map.x]->get(zone.x, zone.y);
+	}
+
 	void Map::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
 		target.draw(*vertices, states);
 	}
 
-	void Map::fillVertices(unsigned int z)
+	void Map::fillVertices()
 	{
-		for(unsigned int i = 0; i < ZONE_SIZE * ZONE_SIZE; i++)
+		vertices->clear();
+		vertices->setPrimitiveType(sf::PrimitiveType::Points);
+		vertices->resize(zoneNum * ZONE_SIZE * zoneNum * ZONE_SIZE);
+
+		const unsigned int DIM = ZONE_SIZE * zoneNum;
+
+		for(unsigned int y = 0; y < DIM; y++)
 		{
-			unsigned int idx = i + z * ZONE_SIZE * ZONE_SIZE;
+			for(unsigned int x = 0; x < DIM; x++)
+			{
+				sf::Vertex& vert = (*vertices)[y * DIM + x];
 
-			// map coordinates
-			unsigned int mx = z % zoneNum;
-			unsigned int my = z / zoneNum;
-
-			// zone coordinates
-			unsigned int zx = i % ZONE_SIZE;
-			unsigned int zy = ZONE_SIZE - 1 - (i / ZONE_SIZE);
-
-			// window position
-			float x = static_cast<float>(mx * ZONE_SIZE + zx);
-			float y = static_cast<float>((zoneNum - 1 - my) * ZONE_SIZE + (ZONE_SIZE - 1 - zy));
-
-			(*vertices)[idx].position = {x, y};
-			(*vertices)[idx].color = zones[z]->get(zx, zy).toColor();
+				vert.position = {static_cast<float>(x), static_cast<float>(y)};
+				vert.color = getEntry(x, y, false).toColor();
+			}
 		}
 	}
 }

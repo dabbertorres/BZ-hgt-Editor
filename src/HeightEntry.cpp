@@ -4,11 +4,11 @@
 
 namespace hgt
 {
-	HeightEntry::Height::Height(unsigned int v)
+	HeightEntry::Height::Height(int v)
 	:	integer(v)
 	{}
 
-	HeightEntry::HeightEntry(unsigned int v)
+	HeightEntry::HeightEntry(int v)
 	:	coplanarTriangles(false),
 		coplanarSquares(false),
 		height(v)
@@ -27,14 +27,14 @@ namespace hgt
 		return coplanarSquares;
 	}
 
-	unsigned int HeightEntry::getHeightInt() const
+	int HeightEntry::getHeightInt() const
 	{
 		return height.integer;
 	}
 
-	std::array<bool, HEIGHT_BITS> HeightEntry::getHeightBits() const
+	HeightArray HeightEntry::getHeightBits() const
 	{
-		std::array<bool, HEIGHT_BITS> bits;
+		HeightArray bits;
 
 		for(unsigned int i = 0; i < HEIGHT_BITS; i++)
 		{
@@ -54,7 +54,7 @@ namespace hgt
 		coplanarSquares = v;
 	}
 
-	void HeightEntry::setHeight(unsigned int v)
+	void HeightEntry::setHeight(int v)
 	{
 		height.integer = v;
 	}
@@ -86,9 +86,10 @@ namespace hgt
 
 	sf::Color HeightEntry::toColor() const
 	{
-		float rScale = ((height.integer & 15 << 8) >> 8) / 15.f;
-		float gScale = ((height.integer & 15 << 4) >> 4) / 15.f;
-		float bScale = ((height.integer & 15 << 0) >> 0) / 15.f;
+		// 15 = max decimal value of 4 bits
+		double rScale = ((height.integer & 15 << 8) >> 8) / 15.0;
+		double gScale = ((height.integer & 15 << 4) >> 4) / 15.0;
+		double bScale = ((height.integer & 15 << 0) >> 0) / 15.0;
 
 		// 255 = max value of a component of color
 		byte r = static_cast<byte>(255 * rScale);

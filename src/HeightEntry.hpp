@@ -14,6 +14,9 @@ namespace hgt
 	using byte = unsigned char;
 	using HeightArray = std::array<bool, HEIGHT_BITS>;
 
+	const int HEIGHT_MIN = 0;
+	const int HEIGHT_MAX = 4095;
+
 	// One height entry is the height of the southwest corner of a grid (10m x 10m area)
 	// One height unit is 0.1m, giving a max height of 409.6m.
 	class HeightEntry
@@ -23,27 +26,27 @@ namespace hgt
 			union Height
 			{
 				// v = initial value
-				Height(unsigned int v = 0);
+				Height(int v = 0);
 
-				unsigned int integer;							// max height is 409.6, so why an int? Well, floating point numbers are complicated bit-wise.
-																// 409.6 is just 4096 / 10. So we can just use 4096 as the max, and let BZ do the hard work.
+				int integer;				// max height is 409.6, so why an int? Well, floating point numbers are complicated bit-wise.
+											// 409.6 is just 4096 / 10. So we can just use 4096 as the max, and let BZ do the hard work.
 
-				std::array<byte, sizeof(unsigned int)> bytes;	// we only use the first 12 bits; the other 20 (8 * sizeof(unsigned int) - 12) are irrelevant
+				byte bytes[sizeof(int)];	// we only use the first 12 bits; the other 20 (8 * sizeof(unsigned int) - 12) are irrelevant
 			};
 			
 			// v = initial height value
-			HeightEntry(unsigned int v = 100);
+			HeightEntry(int v = 100);
 
 			bool isCoplanarTriangles() const;
 			bool isCoplanarSquares() const;
 
-			unsigned int getHeightInt() const;
+			int getHeightInt() const;
 			HeightArray getHeightBits() const;
 
 			void setCoplanarTriangles(bool v);
 			void setCoplanarSquares(bool v);
 
-			void setHeight(unsigned int v);
+			void setHeight(int v);
 			void setHeight(const HeightArray& bits);
 			
 			// returns a string of bits representing the whole height entry

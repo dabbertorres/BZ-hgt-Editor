@@ -25,12 +25,14 @@ namespace hgt
 			Map();
 			~Map() = default;
 
+			void update();
+
 			bool write(const std::string& file) const;
 			bool load(const std::string& file);
 
 			sf::FloatRect getBounds() const;
 
-			HeightEntry& getEntry(unsigned int x, unsigned int y);
+			HeightEntry& getEntry(int x, int y);
 
 			// returns the BZ map size in meters for the X and Y
 			unsigned int getSize() const;
@@ -39,8 +41,16 @@ namespace hgt
 			unsigned int getNumOfZones() const;
 
 		private:
+			sf::Vector2u screenToMap(const sf::Vector2i& vec) const;
+			sf::Vector2u screenToZone(const sf::Vector2i& vec) const;
+			sf::Vector2f zoneAndMapToScreen(const sf::Vector2u& map, const sf::Vector2u& zone) const;
+			sf::Vector2u zoneNumToMap(unsigned int z) const;
+			sf::Vector2u indexToZone(unsigned int i) const;
+
+			HeightEntry& getEntry(int x, int y, bool track);
+
 			virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-			void fillVertices(unsigned int z);
+			void fillVertices();
 
 			static const unsigned int SIZE_DIV = 1280;
 
@@ -48,6 +58,7 @@ namespace hgt
 			unsigned int zoneNum;
 
 			std::unique_ptr<sf::VertexArray> vertices;
+			std::vector<unsigned int> changedVerts;
 
 			std::vector<std::unique_ptr<HeightZone>> zones;
 	};
