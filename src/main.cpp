@@ -273,7 +273,15 @@ int main(int argc, char** argv)
 		window.display();
 	}
 
-	map.write(args[0]);
+	std::string input;
+
+	std::cout << "Save? (y or n): ";
+	std::getline(std::cin, input);
+
+	if(std::tolower(input[0], std::locale()) == 'y')
+	{
+		map.write(args[0]);
+	}
 
 	return 0;
 }
