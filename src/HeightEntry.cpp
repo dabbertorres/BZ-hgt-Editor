@@ -93,25 +93,17 @@ namespace hgt
 		double rScale = 0;
 
 		// calculate colors
-		if(heightScale <= 0.25)
+		if(heightScale <= 0.5)
 		{
-			bScale = 4 * heightScale;
-		}
-		else if(heightScale <= 0.5)
-		{
-			bScale = -4 * heightScale + 2;
-			gScale = 4 * heightScale - 1;
-		}
-		else if(heightScale <= 0.75)
-		{
-			gScale = -4 * heightScale + 3;
-			rScale = 4 * heightScale - 2;
+			rScale = 0;
+			gScale = heightScale / 0.5;
+			bScale = 1.0 - gScale;
 		}
 		else
 		{
-			bScale = 4 * heightScale - 3;
-			gScale = 4 * heightScale - 3;
-			rScale = 1.0;
+			bScale = 0;
+			gScale = (1.0 - heightScale) / 0.5;
+			rScale = 1.0 - gScale;
 		}
 
 		// bound colors
